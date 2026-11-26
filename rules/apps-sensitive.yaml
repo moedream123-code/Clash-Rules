@@ -1,0 +1,12 @@
+payload:
+  - 'PROCESS-NAME,com.instagram.android'
+  - 'PROCESS-NAME,com.instagram.lite'
+  - 'PROCESS-NAME,com.twitter.android'
+  - 'PROCESS-NAME,com.facebook.katana'
+  - 'PROCESS-NAME,com.facebook.lite'
+  - 'PROCESS-NAME,com.facebook.orca'
+  - 'PROCESS-NAME,com.whatsapp'
+  - 'PROCESS-NAME,com.whatsapp.w4b'
+  - 'PROCESS-NAME,org.telegram.messenger'
+  - 'PROCESS-NAME,org.telegram.messenger.web'
+  - 'PROCESS-NAME,com.google.android.apps.bard'

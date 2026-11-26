@@ -1,32 +1,42 @@
 # Clash-Rules
 
-Windows Clash Verge Rev 与 Android FlClash 0.9.4 共用的 Mihomo 分流规则。以对应订阅里已有的 `FlyintPro` 策略组下载规则集，刷新间隔为 3600 秒。
+Windows Clash Verge Rev 與 Android FlClash 0.9.4 共用的 Mihomo 分流規則。規則以 HTTP rule-provider 每 3600 秒更新。既有 Raw URL 繼續使用。
 
-| 规则文件 | 目标策略 | 用途 |
-| --- | --- | --- |
-| `rules/proxy.yaml` | `FlyintPro` | 应用测量域名的既有精确匹配 |
-| `rules/direct.yaml` | `DIRECT` | Microsoft、Xbox 和 Minecraft 登录服务 |
-| `rules/proxy-scp.yaml` | `FlyintPro` | SCP 两个站点的既有精确匹配 |
-| `rules/gpt-proxy.yaml` | `GPT-Proxy` | ChatGPT 和依赖服务 |
-| `rules/direct-loopback.yaml` | `DIRECT` | IPv4、IPv6 回环地址，保留 `no-resolve` |
-| `rules/reject.yaml` | `REJECT` | 自定义拦截预留，空条目对应零条规则 |
+## 安裝與更新
 
-拆分同一策略的两个文件是为了保留交错的规则优先级。Clash Verge Rev 的订阅级扩展脚本另行保留 Windows 进程规则。原订阅的广告规则继续生效，例如 `googleadservices.com` 仍命中 `adservice` 关键字并被拒绝。
-
-## FlClash 0.9.4
-
-打开正在使用的订阅，进入「扩展 → 脚本 → 前往配置脚本」，选择「＋ → 通过URL导入」，粘贴以下地址。返回订阅扩展页，在「扩展脚本」中选中已导入的脚本。以后修改 YAML 文件由 Mihomo 每小时获取。修改脚本后，在脚本管理页的菜单点「更新」。
+在 FlClash 開啟使用中的訂閱，進入「擴展 → 腳本 → 前往配置腳本 → ＋ → 通過URL導入」。返回「擴展腳本」選取 `override`。已匯入上一版的裝置，請在腳本管理頁選擇「更新」一次以啟用新策略組。後續 YAML 更新由 Mihomo 每小時取得。
 
 ```text
 https://raw.githubusercontent.com/moedream123-code/Clash-Rules/main/override.js
 ```
 
-脚本使用已有的 `FlyintPro` 和 `GPT-Proxy`。如果订阅没有 `GPT-Proxy`，脚本用原有的台湾、日本、韩国 fallback 策略补齐，候选节点从本机订阅动态取得。脚本保留订阅的 DNS、TUN、节点和原规则。
+Windows 可使用同一份腳本作為訂閱級擴展。若現有訂閱腳本含本機設定，應保留其邏輯併入覆寫。此同步系統的 Windows 部署將原 DNS 腳本和本機進程規則留在本機。
 
-## 更新与回退
+## 分流行為
 
-规则文件使用 classical YAML。写入匹配类型和匹配值，按需保留 `no-resolve`，策略由覆写脚本中的 `RULE-SET` 引用指定。已下载的规则使用 Mihomo 本地缓存。首次启动且下载失败时使用脚本内置的规则快照。维护规则时同步更新 `override.js` 的对应内置快照，供首次离线启动使用。
+| 規則檔案 | 策略 | 匹配對象 |
+| --- | --- | --- |
+| `apps-gpt.yaml` | `GPT-Proxy` | ChatGPT Android 套件 |
+| `apps-sensitive.yaml` | `Clash-Rules-Sensitive` | Instagram、X、Facebook、Messenger、WhatsApp、Telegram、Gemini Android 套件 |
+| `sensitive-domains.yaml` | `Clash-Rules-Sensitive` | X、Telegram、Gemini、Messenger、Threads 和 Meta 網域 |
+| `meta-upstream.yaml` | `Clash-Rules-Sensitive` | Instagram、Facebook、WhatsApp 正式服務與 CDN 的網域子集 |
+| `gpt-proxy.yaml` | `GPT-Proxy` | 既有 ChatGPT 及依賴網域 |
+| `proxy.yaml`、`proxy-scp.yaml` | `FlyintPro` | 既有測量域名與 SCP 例外 |
+| `direct.yaml`、`direct-loopback.yaml` | `DIRECT` | 既有登入例外和回環地址 |
+| `reject.yaml` | `REJECT` | 自訂攔截預留 |
 
-Android 可在订阅的「扩展 → 脚本」中取消选中。Windows 恢复原订阅级扩展脚本并重新应用配置即可恢复原始规则。
+套件精確匹配優先於網域，網域規則在原訂閱的關鍵字、CN、GEOIP 和 MATCH 前執行。Windows 明確寫出的本機直連進程仍可優先於純網域規則。ChatGPT 保留 GPT 專用群組，Gemini 使用同一訂閱中僅允許 UDP 代理節點的群組。
 
-[FlClash 0.9.4 官方源码](https://github.com/chen08209/FlClash/tree/v0.9.4) · [Mihomo rule-providers 文档](https://wiki.metacubex.one/config/rule-providers/)
+`Clash-Rules-Sensitive` 從當前訂閱的代理節點中挑選有明確 `udp: true` 且無 `dialer-proxy` 的可用協議。群組無 `DIRECT` 選項，空群組使用 `REJECT`。若 Mihomo 因節點不支援 UDP 跳過第一道規則，相鄰的 UDP 規則拒絕封包，避免繼續落到後面的直連規則。
+
+指定網域進入 Mihomo DNS 後，以各自的代理群組請求 DoH。其他 DNS、IPv6 和 TUN 設定沿用客戶端。Android 套件識別需要 FlClash VPN 接管流量。套件排除、系統旁路、App 自帶 DNS 或未進入核心的流量，均受裝置實際設定影響。FlClash 本機新增規則會排在腳本規則之前，避免為這些套件或網域再加直連規則。
+
+## 資料來源及回退
+
+`meta-upstream.yaml` 取自 MetaCubeX 的固定版本，選取常用服務網域和精確 CDN 主機。每小時同步的是本倉庫維護的集合。三份來源分別為 [Instagram](https://github.com/MetaCubeX/meta-rules-dat/blob/ebdf916c315bb0411a7ce323a7a6c002e15146a7/geo/geosite/instagram.yaml)、[Facebook](https://github.com/MetaCubeX/meta-rules-dat/blob/ebdf916c315bb0411a7ce323a7a6c002e15146a7/geo/geosite/facebook.yaml) 和 [WhatsApp](https://github.com/MetaCubeX/meta-rules-dat/blob/ebdf916c315bb0411a7ce323a7a6c002e15146a7/geo/geosite/whatsapp.yaml)。
+
+下載失敗時保留上次成功的快取。首次離線或快取不可用時使用腳本中同版本的內置規則。維護 YAML 時可同步更新腳本中的內置快照，以更新首次離線的回退版本。
+
+Android 在訂閱的「擴展 → 腳本」取消選取即可回退。Windows 恢復原訂閱級擴展腳本，再重新套用訂閱。
+
+[FlClash 0.9.4 原始碼](https://github.com/chen08209/FlClash/tree/v0.9.4) · [Mihomo rule-providers](https://wiki.metacubex.one/config/rule-providers/)

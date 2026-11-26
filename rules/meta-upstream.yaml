@@ -1,0 +1,16 @@
+# Canonical domains selected from MetaCubeX/meta-rules-dat at ebdf916c315bb0411a7ce323a7a6c002e15146a7.
+payload:
+  - 'DOMAIN-SUFFIX,instagram.com'
+  - 'DOMAIN-SUFFIX,cdninstagram.com'
+  - 'DOMAIN-SUFFIX,ig.me'
+  - 'DOMAIN-SUFFIX,facebook.com'
+  - 'DOMAIN-SUFFIX,facebook.net'
+  - 'DOMAIN-SUFFIX,fb.com'
+  - 'DOMAIN-SUFFIX,fb.me'
+  - 'DOMAIN-SUFFIX,fbcdn.net'
+  - 'DOMAIN-SUFFIX,fbsbx.com'
+  - 'DOMAIN,fbcdn-a.akamaihd.net'
+  - 'DOMAIN-SUFFIX,whatsapp.com'
+  - 'DOMAIN-SUFFIX,whatsapp.net'
+  - 'DOMAIN-SUFFIX,wa.me'
+  - 'DOMAIN-SUFFIX,whatsappbrand.com'
