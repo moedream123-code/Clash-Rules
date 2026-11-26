@@ -1,0 +1,8 @@
+payload:
+  - 'PROCESS-NAME,jp.nicovideo.android'
+  - 'PROCESS-NAME,jp.co.dwango.nicocas'
+  - 'DOMAIN-SUFFIX,nicovideo.jp'
+  - 'DOMAIN-SUFFIX,nimg.jp'
+  - 'DOMAIN-SUFFIX,nico.ms'
+  - 'DOMAIN-SUFFIX,nicochannel.jp'
+  - 'DOMAIN-SUFFIX,dmc.nico'

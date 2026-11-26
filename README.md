@@ -21,6 +21,7 @@ Windows 可使用同一份腳本作為訂閱級擴展。若現有訂閱腳本含
 | `sensitive-domains.yaml` | `Clash-Rules-Sensitive` | X、Telegram、Gemini、Messenger、Threads 和 Meta 網域 |
 | `meta-upstream.yaml` | `Clash-Rules-Sensitive` | Instagram、Facebook、WhatsApp 正式服務與 CDN 的網域子集 |
 | `gpt-proxy.yaml` | `GPT-Proxy` | 既有 ChatGPT 及依賴網域 |
+| `niconico-jp.yaml` | `Clash-Rules-JP` | Niconico 影片及直播 Android 套件、網站與播放網域 |
 | `proxy.yaml`、`proxy-scp.yaml` | `FlyintPro` | 既有測量域名與 SCP 例外 |
 | `direct.yaml`、`direct-loopback.yaml` | `DIRECT` | 既有登入例外和回環地址 |
 | `reject.yaml` | `REJECT` | 自訂攔截預留 |
@@ -28,6 +29,8 @@ Windows 可使用同一份腳本作為訂閱級擴展。若現有訂閱腳本含
 套件精確匹配優先於網域，網域規則在原訂閱的關鍵字、CN、GEOIP 和 MATCH 前執行。Windows 明確寫出的本機直連進程仍可優先於純網域規則。ChatGPT 保留 GPT 專用群組，Gemini 使用同一訂閱中僅允許 UDP 代理節點的群組。
 
 `Clash-Rules-Sensitive` 從當前訂閱的代理節點中挑選有明確 `udp: true` 且無 `dialer-proxy` 的可用協議。群組無 `DIRECT` 選項，空群組使用 `REJECT`。若 Mihomo 因節點不支援 UDP 跳過第一道規則，相鄰的 UDP 規則拒絕封包，避免繼續落到後面的直連規則。
+
+`Clash-Rules-JP` 只列出同樣支援 UDP、且節點名稱標註日本的節點。Niconico 的網域查詢使用這個群組。訂閱沒有符合條件的日本節點時，Niconico 規則使用 `REJECT`。
 
 指定網域進入 Mihomo DNS 後，以各自的代理群組請求 DoH。其他 DNS、IPv6 和 TUN 設定沿用客戶端。Android 套件識別需要 FlClash VPN 接管流量。套件排除、系統旁路、App 自帶 DNS 或未進入核心的流量，均受裝置實際設定影響。FlClash 本機新增規則會排在腳本規則之前，避免為這些套件或網域再加直連規則。
 

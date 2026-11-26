@@ -125,6 +125,18 @@ function applySyncedClashRules(config, originalWindowsRules) {
       "DOMAIN-SUFFIX,wa.me",
       "DOMAIN-SUFFIX,whatsappbrand.com"
     ]
+  },
+  {
+    "file": "niconico-jp",
+    "payload": [
+      "PROCESS-NAME,jp.nicovideo.android",
+      "PROCESS-NAME,jp.co.dwango.nicocas",
+      "DOMAIN-SUFFIX,nicovideo.jp",
+      "DOMAIN-SUFFIX,nimg.jp",
+      "DOMAIN-SUFFIX,nico.ms",
+      "DOMAIN-SUFFIX,nicochannel.jp",
+      "DOMAIN-SUFFIX,dmc.nico"
+    ]
   }
 ];
   const fallbackGroups = [
@@ -190,6 +202,7 @@ function applySyncedClashRules(config, originalWindowsRules) {
   const flyint = "FlyintPro";
   const gpt = "GPT-Proxy";
   const sensitive = "Clash-Rules-Sensitive";
+  const japan = "Clash-Rules-JP";
   const providerName = file => "clash-rules-sync-" + file;
   const ref = (file, policy) => "RULE-SET," + providerName(file) + "," + policy;
   const udpGuard = file => "AND,((NETWORK,UDP),(RULE-SET," + providerName(file) + ")),REJECT";
@@ -222,7 +235,7 @@ function applySyncedClashRules(config, originalWindowsRules) {
   ];
   const protect = (file, policy) => [ref(file, policy), udpGuard(file)];
   const gptIndex = oldPrefix.indexOf(ref("gpt-proxy", gpt));
-  const prefix = [
+  const prefixHead = [
     ...protect("apps-gpt", gpt),
     ...protect("apps-sensitive", sensitive),
     // Existing Windows DIRECT process rules still take precedence over domain-only matching.
@@ -230,12 +243,17 @@ function applySyncedClashRules(config, originalWindowsRules) {
     ...protect("sensitive-domains", sensitive),
     ...protect("meta-upstream", sensitive),
     ...protect("gpt-proxy", gpt),
-    ...oldPrefix.slice(gptIndex + 1),
   ];
+  const prefixTail = oldPrefix.slice(gptIndex + 1);
+  const previousPrefix = [...prefixHead, ...prefixTail];
+  const prefix = [...prefixHead, ...protect("niconico-jp", japan), ...prefixTail];
   let originalRules = rules;
   const alreadySynced = startsWith(prefix);
+  const previouslySynced = startsWith(previousPrefix);
   if (alreadySynced) {
     originalRules = rules.slice(prefix.length);
+  } else if (previouslySynced) {
+    originalRules = rules.slice(previousPrefix.length);
   } else if (startsWith(oldPrefix)) {
     originalRules = rules.slice(oldPrefix.length);
   } else if (originalWindowsRules) {
@@ -249,8 +267,9 @@ function applySyncedClashRules(config, originalWindowsRules) {
     console.warn("Clash-Rules found an existing injection in a different order.");
     return config;
   }
-  if (names.has(sensitive) && !alreadySynced) {
-    console.warn("Clash-Rules proxy group name is already in use: " + sensitive);
+  if ((names.has(sensitive) && !alreadySynced && !previouslySynced) ||
+      (names.has(japan) && !alreadySynced)) {
+    console.warn("Clash-Rules proxy group name is already in use.");
     return config;
   }
 
@@ -262,6 +281,14 @@ function applySyncedClashRules(config, originalWindowsRules) {
     name: sensitive,
     type: "select",
     proxies: eligible.length ? eligible : ["REJECT"],
+    "empty-fallback": "REJECT",
+  };
+  const japanNodes = eligible.filter(name =>
+    /^(Japan\b|日本|🇯🇵|JP(?:[ _-]|$)|Tokyo\b|Osaka\b)/i.test(name));
+  const japanGroup = {
+    name: japan,
+    type: "select",
+    proxies: japanNodes.length ? japanNodes : ["REJECT"],
     "empty-fallback": "REJECT",
   };
 
@@ -290,15 +317,21 @@ function applySyncedClashRules(config, originalWindowsRules) {
   config["rule-providers"] = { ...existingProviders, ...providers };
   config.rules = [...prefix, ...originalRules];
   config["proxy-groups"] = [
-    ...groups.filter(group => group.name !== sensitive),
+    ...groups.filter(group => group.name !== sensitive && group.name !== japan),
     ...extraGroups,
     sensitiveGroup,
+    japanGroup,
   ];
   if (config["find-process-mode"] === "off") config["find-process-mode"] = "strict";
   if (config.dns?.enable !== false && config.dns) {
     const policy = { ...config.dns["nameserver-policy"] };
-    for (const file of ["meta-upstream", "sensitive-domains", "gpt-proxy"]) {
-      const resolver = "https://1.1.1.1/dns-query#" + (file === "gpt-proxy" ? gpt : sensitive);
+    for (const [file, group] of [
+      ["meta-upstream", sensitive],
+      ["sensitive-domains", sensitive],
+      ["gpt-proxy", gpt],
+      ["niconico-jp", japan],
+    ]) {
+      const resolver = "https://1.1.1.1/dns-query#" + group;
       policy["rule-set:" + providerName(file)] = resolver;
       for (const rule of sources.find(source => source.file === file).payload) {
         const [kind, host] = rule.split(",");
