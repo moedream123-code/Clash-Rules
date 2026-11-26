@@ -1,0 +1,9 @@
+payload:
+  - 'DOMAIN,login.live.com'
+  - 'DOMAIN,login.microsoftonline.com'
+  - 'DOMAIN-SUFFIX,auth.xboxlive.com'
+  - 'DOMAIN,sisu.xboxlive.com'
+  - 'DOMAIN,api.minecraftservices.com'
+  - 'DOMAIN,api.mojang.com'
+  - 'DOMAIN,sessionserver.mojang.com'
+  - 'DOMAIN,textures.minecraft.net'
